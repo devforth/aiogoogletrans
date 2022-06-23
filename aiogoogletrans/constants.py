@@ -1,5 +1,9 @@
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
 
+DEFAULT_CLIENT_SERVICE_URLS = (
+    'translate.googleapis.com',
+)
+
 SPECIAL_CASES = {
     'ee': 'et',
 }
@@ -42,6 +46,7 @@ LANGUAGES = {
     'ha': 'hausa',
     'haw': 'hawaiian',
     'iw': 'hebrew',
+    'he': 'hebrew',
     'hi': 'hindi',
     'hmn': 'hmong',
     'hu': 'hungarian',
@@ -74,6 +79,7 @@ LANGUAGES = {
     'my': 'myanmar (burmese)',
     'ne': 'nepali',
     'no': 'norwegian',
+    'or': 'odia',
     'ps': 'pashto',
     'fa': 'persian',
     'pl': 'polish',
@@ -102,6 +108,7 @@ LANGUAGES = {
     'tr': 'turkish',
     'uk': 'ukrainian',
     'ur': 'urdu',
+    'ug': 'uyghur',
     'uz': 'uzbek',
     'vi': 'vietnamese',
     'cy': 'welsh',
@@ -109,8 +116,9 @@ LANGUAGES = {
     'yi': 'yiddish',
     'yo': 'yoruba',
     'zu': 'zulu',
-    'fil': 'Filipino',
-    'he': 'Hebrew'
 }
 
 LANGCODES = dict(map(reversed, LANGUAGES.items()))
+DEFAULT_RAISE_EXCEPTION = False
+DUMMY_DATA = [[["", None, None, 0]], None, "en", None,
+              None, None, 1, None, [["en"], None, [1], ["en"]]]
