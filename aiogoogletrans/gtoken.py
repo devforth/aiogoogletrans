@@ -4,11 +4,9 @@ import math
 import re
 import time
 
-import aiohttp
+import httpx
 import asyncio
 
-
-from aiogoogletrans.constants import DEFAULT_USER_AGENT
 from aiogoogletrans.utils import rshift
 
 
@@ -41,10 +39,8 @@ class TokenAcquirer(object):
     RE_TKK = re.compile(r'tkk:\'(.+?)\'', re.DOTALL)
     RE_RAWTKK = re.compile(r'tkk:\'(.+?)\'', re.DOTALL)
 
-    def __init__(self, tkk='0', host='translate.google.com', user_agent=DEFAULT_USER_AGENT):
-        self.headers = {
-            'User-Agent': user_agent,
-        }
+    def __init__(self, client: httpx.Client, tkk='0', host='translate.google.com'):
+        self.client = client
         self.tkk = tkk
         self.host = host if 'http' in host else 'https://' + host
 
@@ -52,24 +48,26 @@ class TokenAcquirer(object):
         """update tkk
         """
         # we don't need to update the base TKK value when it is still valid
-        async with aiohttp.ClientSession(headers=self.headers) as session:
-            async with session.get(self.host) as resp:
-                text = await resp.text()
-
-        self.tkk = self.RE_TKK.findall(text)[0]
         now = math.floor(int(time.time() * 1000) / 3600000.0)
         if self.tkk and int(self.tkk.split('.')[0]) == now:
             return
+
+        r = await self.client.get(self.host)
 
         raw_tkk = self.RE_TKK.search(r.text)
         if raw_tkk:
             self.tkk = raw_tkk.group(1)
             return
 
-        # this will be the same as python code after stripping out a reserved word 'var'
-        code = str(self.RE_TKK.search(text).group(1)).replace('var ', '')
-        # unescape special ascii characters such like a \x3d(=)
-        code = code.encode().decode('unicode-escape')
+        try:
+            # this will be the same as python code after stripping out a reserved word 'var'
+            code = self.RE_TKK.search(r.text).group(1).replace('var ', '')
+            # unescape special ascii characters such like a \x3d(=)
+            code = code.encode().decode('unicode-escape')
+        except AttributeError:
+            raise Exception('Could not find TKK token for this request.\nSee https://github.com/ssut/py-googletrans/issues/234 for more details.')
+        except:
+            raise
 
         if code:
             tree = ast.parse(code)
@@ -143,6 +141,19 @@ class TokenAcquirer(object):
         return a
 
     def acquire(self, text):
+        a = []
+        # Convert text to ints
+        for i in text:
+            val = ord(i)
+            if val < 0x10000:
+                a += [val]
+            else:
+                # Python doesn't natively use Unicode surrogates, so account for those
+                a += [
+                    math.floor((val - 0x10000) / 0x400 + 0xD800),
+                    math.floor((val - 0x10000) % 0x400 + 0xDC00)
+                ]
+
         b = self.tkk if self.tkk != '0' else ''
         d = b.split('.')
         b = int(d[0]) if len(d) > 1 else 0
@@ -150,9 +161,9 @@ class TokenAcquirer(object):
         # assume e means char code array
         e = []
         g = 0
-        size = len(text)
-        for i, char in enumerate(text):
-            l = ord(char)
+        size = len(a)
+        while g < size:
+            l = a[g]
             # just append if l is less than 128(ascii: DEL)
             if l < 128:
                 e.append(l)
@@ -163,15 +174,16 @@ class TokenAcquirer(object):
                 else:
                     # append calculated value if l matches special condition
                     if (l & 64512) == 55296 and g + 1 < size and \
-                            ord(text[g + 1]) & 64512 == 56320:
+                            a[g + 1] & 64512 == 56320:
                         g += 1
-                        l = 65536 + ((l & 1023) << 10) + ord(text[g]) & 1023
+                        l = 65536 + ((l & 1023) << 10) + (a[g] & 1023)  # This bracket is important
                         e.append(l >> 18 | 240)
                         e.append(l >> 12 & 63 | 128)
                     else:
                         e.append(l >> 12 | 224)
                     e.append(l >> 6 & 63 | 128)
                 e.append(l & 63 | 128)
+            g += 1
         a = b
         for i, value in enumerate(e):
             a += value

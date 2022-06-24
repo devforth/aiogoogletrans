@@ -1,4 +1,4 @@
-aiohttp
+httpx
 pytest
 pytest-asyncio
 future

@@ -4,8 +4,7 @@
 #
 #    pip-compile --no-index --output-file test-requirements.txt test-requirements.in
 #
-aiohttp==3.4.4
-async-timeout==3.0.0      # via aiohttp
+httpx==3.4.4
 atomicwrites==1.2.1       # via pytest
 attrs==18.2.0             # via aiohttp, pytest
 certifi==2018.8.24        # via requests
@@ -16,7 +15,6 @@ docopt==0.6.2             # via coveralls
 future==0.16.0
 idna==2.7                 # via requests, yarl
 more-itertools==4.3.0     # via pytest
-multidict==4.4.1          # via aiohttp, yarl
 pluggy==0.7.1             # via pytest, tox
 py==1.6.0                 # via pytest, tox
 pytest-asyncio==0.9.0
@@ -27,4 +25,3 @@ toml==0.9.6               # via tox
 tox==3.3.0
 urllib3==1.23             # via requests
 virtualenv==16.0.0        # via tox
-yarl==1.2.6               # via aiohttp
