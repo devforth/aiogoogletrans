@@ -4,4 +4,4 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
-httpx==0.13.3
+httpx==0.23.0

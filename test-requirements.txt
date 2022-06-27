@@ -4,7 +4,7 @@
 #
 #    pip-compile --no-index --output-file test-requirements.txt test-requirements.in
 #
-httpx==3.4.4
+aiohttp==3.4.4
 atomicwrites==1.2.1       # via pytest
 attrs==18.2.0             # via aiohttp, pytest
 certifi==2018.8.24        # via requests
